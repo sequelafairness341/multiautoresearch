@@ -73,10 +73,13 @@ After creating a live rig from this repo:
 ```bash
 gt rig add autolab <repo-url>
 ./scripts/install-rig-assets.sh ~/gt/autolab
+./scripts/install-rig-assets.sh --check ~/gt/autolab
 ```
 
 That installs the checked-in planner and polecat directives plus the autolab
-formula overlay into the rig container where Gas Town expects them.
+formula overlay into the rig container where Gas Town expects them. Use
+`--check` to confirm the live rig still matches the checked-in assets, and rerun
+the install command if it reports drift.
 
 ## Push Policy
 
