@@ -62,3 +62,27 @@ Conclusion:
 - This beat both the local baseline (`0.962846`) and the current hub master (`0.962777`).
 - Submitted as patch `14808` against master `765a36b0700b3a20d552f48b8ca2b75636aa3e69`.
 - Workspace `train.py` was reset back to master after submission so the next experiment starts clean.
+
+## Experiment: au-41x lm_head_wd_003
+
+Hypothesis:
+- Increase only the `lm_head` AdamW weight decay from `0.002` to `0.003`.
+- Slightly stronger output-layer regularization may improve validation bpb without perturbing the other optimizer groups.
+
+Change:
+- `lm_head` optimizer group `weight_decay = 0.003`
+
+Managed H200 result:
+- Master hash: `765a36b0700b3a20d552f48b8ca2b75636aa3e69`
+- HF Job: `69c5a34525abd6f920b4fea3`
+- val_bpb: `0.961175`
+- training_seconds: `300.0`
+- total_seconds: `430.2`
+- peak_vram_mb: `33609.6`
+- mfu_percent: `45.18`
+- total_tokens_M: `313.7`
+- num_steps: `2393`
+
+Conclusion:
+- This beats the current hub master (`0.962777`) by `0.001602`.
+- Submitted as patch `14810`.
