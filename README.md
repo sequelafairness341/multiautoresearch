@@ -1,16 +1,7 @@
 # autolab-rig
 
-Public operator repository for running Autolab experiments with Hugging Face
-Jobs and, optionally, Gas Town.
-
-The default path is simple:
-
-1. clone the repo
-2. add your local Autolab credentials
-3. log into Hugging Face
-4. run the bootstrap check
-5. refresh benchmark master
-6. launch one managed experiment
+Public operator repository for running Autolab experiments with Gas Town and
+Hugging Face Jobs.
 
 This repo does **not** bundle the Autolab backend itself. You need access to a
 hosted Autolab service plus Hugging Face Jobs.
@@ -22,15 +13,11 @@ hosted Autolab service plus Hugging Face Jobs.
 - `hf` CLI
 - a Hugging Face account with Jobs access
 - a hosted Autolab account, endpoint, and API key
-- optional: Gas Town if you want planner/polecat orchestration
+- Gas Town
 
-## Start Here
+## Quick Start
 
-If you only want to try the project, use the direct operator path below. You do
-not need Gas Town for a first run.
-
-If you specifically want the rig workflow from the start, skip to
-[Quick Start With Gas Town](#quick-start-with-gas-town).
+This is the canonical setup path for the repo.
 
 ### 1. Clone And Install
 
@@ -72,58 +59,7 @@ This verifies:
 
 If this step fails, start with [docs/troubleshooting.md](docs/troubleshooting.md).
 
-### 5. Warm The Shared Cache Once
-
-```bash
-python3 scripts/hf_job.py launch --mode prepare
-```
-
-### 6. Refresh Current Benchmark Master
-
-```bash
-python3 scripts/refresh_master.py --fetch-dag
-```
-
-This rewrites `train.py`, `train_orig.py`, and `research/live/*`. Treat those
-files as the benchmark source of truth. Do **not** use repo git history such as
-`main` or `origin/main` as benchmark truth.
-
-### 7. Make One Change In `train.py`
-
-Most experiments should edit `train.py` only.
-
-### 8. Launch One Managed Experiment
-
-```bash
-python3 scripts/hf_job.py preflight
-python3 scripts/hf_job.py launch --mode experiment
-python3 scripts/hf_job.py logs <JOB_ID> --follow --output /tmp/autolab-run.log
-python3 scripts/parse_metric.py /tmp/autolab-run.log
-```
-
-### 9. Submit Only If You Beat Master
-
-```bash
-python3 scripts/submit_patch.py --comment "one-sentence hypothesis and observed val_bpb"
-```
-
-## Quick Start With Gas Town
-
-Use this path if you want planner, polecat, researcher, and reporter workers
-from the beginning instead of running the scripts by hand.
-
-### 1. Prove The Base Setup First
-
-Complete these direct-mode steps first:
-
-- create `~/.autolab/credentials`
-- run `hf auth login`
-- run `bash scripts/bootstrap_public.sh`
-
-That isolates Hugging Face and hosted-backend issues before Gas Town enters the
-loop.
-
-### 2. Create The Rig
+### 5. Create The Gas Town Rig
 
 ```bash
 gt rig add autolab https://github.com/burtenshaw/autolab-gastown.git
@@ -131,7 +67,7 @@ gt rig add autolab https://github.com/burtenshaw/autolab-gastown.git
 ./scripts/install-rig-assets.sh --check ~/gt/autolab
 ```
 
-### 3. Add The Control-Plane Workers
+### 6. Add The Control-Plane Workers
 
 ```bash
 cd ~/gt/autolab
@@ -139,21 +75,31 @@ gt crew add researcher --rig autolab
 gt crew add reporter --rig autolab
 ```
 
-### 4. Start Working
-
-The common operator pattern is:
+### 7. Warm The Shared Cache And Refresh Master
 
 ```bash
 cd ~/gt/autolab/crew/planner
 . ~/.autolab/credentials
+python3 scripts/hf_job.py launch --mode prepare
 python3 scripts/refresh_master.py --fetch-dag
+```
+
+This rewrites `train.py`, `train_orig.py`, and `research/live/*`. Treat those
+files as the benchmark source of truth. Do **not** use repo git history such as
+`main` or `origin/main` as benchmark truth.
+
+### 8. Create And Dispatch Your First Bead
+
+```bash
+bd create --title "optimizer: first autolab experiment" --type=task --priority=1
+# note the bead id from the output, then:
 gt convoy create "optimizer: first autolab run" <BEAD_ID>
 gt sling <BEAD_ID> autolab --agent codex
 ```
 
-For the full role split and daily workflow, continue with
-[docs/gastown.md](docs/gastown.md) and
-[docs/gastown-codex-guide.md](docs/gastown-codex-guide.md).
+At that point the planner and polecats own the benchmark loop. For the full
+role split and daily workflow, continue with [docs/gastown.md](docs/gastown.md)
+and [docs/gastown-codex-guide.md](docs/gastown-codex-guide.md).
 
 ## First Run Rules
 
@@ -171,6 +117,11 @@ uv run scripts/trackio_reporter.py sync --project "${AUTOLAB_TRACKIO_PROJECT:-au
 uv run scripts/trackio_reporter.py dashboard --project "${AUTOLAB_TRACKIO_PROJECT:-autolab}" --mcp-server --no-footer
 ```
 
+## Script-Only Path
+
+If you want to use the benchmark scripts directly without Gas Town, see
+[docs/getting-started.md](docs/getting-started.md).
+
 ## Stable Public Entrypoints
 
 These scripts are the operator-facing interface of the repo:
@@ -183,26 +134,6 @@ These scripts are the operator-facing interface of the repo:
 
 See [docs/script-reference.md](docs/script-reference.md) for inputs,
 environment variables, outputs, and external dependencies.
-
-## Supported Modes
-
-### Direct Operator Mode
-
-Use the scripts directly from this checkout. This is the recommended path for a
-new operator and does not require Gas Town.
-
-### Gas Town Mode
-
-Once the direct path makes sense, you can add planner, polecat, researcher, and
-reporter workers:
-
-```bash
-gt rig add autolab <repo-url>
-./scripts/install-rig-assets.sh ~/gt/autolab
-./scripts/install-rig-assets.sh --check ~/gt/autolab
-```
-
-Then continue with [docs/gastown.md](docs/gastown.md).
 
 ## Contribution Model
 
