@@ -718,6 +718,27 @@ def default_timeout(mode: str) -> str:
     return env_map.get(mode) or fallback[mode]
 
 
+def default_secret_entries(mode: str) -> list[str]:
+    raw = os.environ.get("AUTOLAB_HF_SECRETS")
+    if raw is not None:
+        return [entry for entry in re.split(r"[\s,]+", raw) if entry]
+    if mode in {"prepare", "experiment"}:
+        return ["HF_TOKEN"]
+    return []
+
+
+def resolve_secret_entries(mode: str, extra_entries: list[str]) -> list[str]:
+    merged: list[str] = []
+    seen: set[str] = set()
+    for entry in [*default_secret_entries(mode), *extra_entries]:
+        value = entry.strip()
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        merged.append(value)
+    return merged
+
+
 def build_job_labels(mode: str, context: dict[str, object] | None = None) -> list[str]:
     labels = [
         "autolab",
@@ -840,6 +861,9 @@ def launch_job(args: argparse.Namespace) -> int:
         command.extend(["--label", label])
     for env_entry in args.env:
         command.extend(["--env", env_entry])
+    secret_entries = resolve_secret_entries(args.mode, args.secret)
+    for secret_entry in secret_entries:
+        command.extend(["--secrets", secret_entry])
     if bucket:
         command.extend(["--env", f"AUTOLAB_HOME={AUTOLAB_HOME}"])
         command.extend(["--volume", f"hf://buckets/{bucket}:{AUTOLAB_CACHE_MOUNT}"])
@@ -865,6 +889,7 @@ def launch_job(args: argparse.Namespace) -> int:
         "timeout": timeout,
         "command": command,
         "labels": parse_label_entries(label_entries),
+        "secrets": secret_entries,
     }
     if preflight_report is not None:
         state["preflight"] = preflight_report
@@ -972,6 +997,12 @@ def build_parser() -> argparse.ArgumentParser:
     launch_parser.add_argument("--timeout", help="override HF Jobs timeout")
     launch_parser.add_argument("--namespace", default=DEFAULT_NAMESPACE, help="run the job under this namespace")
     launch_parser.add_argument("--env", action="append", default=[], help="extra HF Jobs --env entries")
+    launch_parser.add_argument(
+        "--secret",
+        action="append",
+        default=[],
+        help="extra HF Jobs --secrets entries; defaults to HF_TOKEN for prepare/experiment unless AUTOLAB_HF_SECRETS overrides",
+    )
     launch_parser.add_argument("--label", action="append", default=[], help="extra HF Jobs --label entries")
     launch_parser.add_argument("--skip-bucket-create", action="store_true", help="do not create the bucket before launch")
     launch_parser.add_argument("--allow-duplicate", action="store_true", help="allow launching even if an active experiment already exists for this bead")
