@@ -10,6 +10,70 @@ Rules:
   `research/notes.md`.
 - Promote only one hypothesis per bead.
 
+## 2026-03-27 shortlist for `au-cyy`
+
+Context:
+
+- target hub master for the next direct-master runs is
+  `765a36b0700b3a20d552f48b8ca2b75636aa3e69` (`val_bpb = 0.962777`)
+- explicitly exclude the already-low-confidence lines from recent history:
+  attention temperature scaling, `SLSL`, GQA half-KV, and `has_ve()` every
+  second layer
+- also exclude direct repeats that already have fresh swarm evidence:
+  power-law cooldown exponent `2.0` regressed on `au-fpz`, and constant Muon
+  `beta2 = 0.9` already has an archived win plus a live direct-master confirm
+  bead (`au-08h`)
+
+### 1. WSD-style short cooldown length
+
+- Papers: `2405.18392`, `2508.01483`
+- Why this is next:
+  - current `WARMDOWN_RATIO = 0.825` means the run is in cooldown for 82.5% of
+    the five-minute budget
+  - the scaling/cooldown papers both point toward much shorter decay tails, with
+    most of the gain saturating around a 10-20% cooldown rather than a nearly
+    full-run anneal
+- Exact `train.py` edit surface:
+  - change only `WARMDOWN_RATIO`
+  - leave `get_lr_multiplier()` and `FINAL_LR_FRAC` unchanged so attribution
+    stays clean
+- Recommended bead title:
+  - `schedule: shorten warmdown to a 20% tail on 765a36b`
+
+### 2. 1-sqrt cooldown shape
+
+- Papers: `2405.18392`, `2508.01483`
+- Why this is next:
+  - `2405.18392` reports that a `1-sqrt` cooldown can outperform linear decay
+    once the cooldown is long enough
+  - this is meaningfully different from the already-losing exponent-2 power-law
+    trial because it changes the late-phase curvature without introducing an
+    extra exponent hyperparameter
+- Exact `train.py` edit surface:
+  - change only the cooldown branch inside `get_lr_multiplier()`
+  - keep `WARMDOWN_RATIO` and `FINAL_LR_FRAC` fixed for the first bead
+- Recommended bead title:
+  - `schedule: replace linear warmdown with 1-sqrt cooldown on 765a36b`
+
+### 3. Cooldown-only Muon `beta2` ramp
+
+- Papers: `2508.01483`, `2601.14603`
+- Why this is next:
+  - `2508.01483` reports consistent gains from higher `beta2` during cooldown
+  - `2601.14603` motivates variance-adaptive Muon extensions rather than
+    treating `beta2` as a fixed always-on toggle
+  - this avoids spending another bead on the already-known constant
+    `beta2 = 0.9` rerun and instead isolates whether the gain is specifically a
+    late-phase variance-control effect
+- Exact `train.py` edit surface:
+  - add a `get_muon_beta2(progress)` helper next to
+    `get_lr_multiplier()/get_muon_momentum()/get_weight_decay()`
+  - in the training-loop param-group update, set `group["beta2"]` only for
+    Muon groups while leaving matrix LR, momentum, and weight decay schedules
+    unchanged
+- Recommended bead title:
+  - `optimizer: ramp Muon beta2 during cooldown on 765a36b`
+
 ## Current Paper-Derived Candidates
 
 ### Selective attention temperature
