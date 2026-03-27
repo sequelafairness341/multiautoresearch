@@ -1,104 +1,138 @@
 # autolab-rig
 
-Concrete repository for running autolab with Gas Town and Codex CLI.
+Public operator repository for running Autolab experiments with Hugging Face
+Jobs and, optionally, Gas Town.
 
-This repo is the source of truth for:
+This repository contains:
 
-- the live benchmark harness at repo root
-- local research notes and seeded hub snapshots under `research/`
+- the benchmark surface at repo root
+- hosted-backend refresh and submission clients under `scripts/`
+- local experiment memory under `research/`
 - Gas Town rig assets under `gastown/`
 
-It is intentionally separate from the Gas Town source repo. Keep reusable
-orchestration code in `autoresearch-gastown`. Keep live autolab work here.
+It does **not** bundle the Autolab backend itself. The default workflow assumes
+you have access to a hosted Autolab service plus Hugging Face Jobs.
 
-## Layout
+## What This Repo Is
 
 - `train.py`
-  Working experiment file. This is the only file most experiments should edit.
+  The working experiment surface. Most benchmark runs should edit this file
+  only.
 - `train_orig.py`
-  Local copy of the current hub master used as the diff base.
+  The current hosted benchmark master after a refresh.
 - `prepare.py`
   Read-only benchmark setup and evaluation logic.
-- `run-local.sh`
-  Canonical timed local run wrapper.
-- `scripts/hf_job.py`
-  Render, launch, inspect, and stream Hugging Face Jobs for the benchmark rig.
-- `scripts/trackio_reporter.py`
-  Sync HF Jobs into a local Trackio project and run the local dashboard.
-- `sitecustomize.py`
-  Machine-local compatibility shim for local runs. Keep local hacks here, not in
-  submitted diffs.
 - `scripts/refresh_master.py`
-  Refresh `train.py`, `train_orig.py`, and live hub snapshots from the autolab
-  API.
-- `scripts/submit_patch.py`
-  Generate a unified diff and submit it to the autolab API.
+  Pull current benchmark truth from the hosted Autolab service into local files.
+- `scripts/hf_job.py`
+  Preflight, render, launch, inspect, and tail managed Hugging Face Jobs runs.
 - `scripts/parse_metric.py`
-  Parse the final metric block from a local run log.
+  Parse the final metric block from a completed run log.
+- `scripts/submit_patch.py`
+  Submit a winning unified diff back to the hosted Autolab service.
+- `scripts/trackio_reporter.py`
+  Build a local Trackio experiment board from Hugging Face Jobs activity.
 - `scripts/install-rig-assets.sh`
-  Copy the checked-in Gas Town rig assets into a live `~/gt/<rig>/` layout.
+  Install the checked-in Gas Town rig assets into `~/gt/<rig>/`.
 - `gastown/`
-  Rig directives, overlays, templates, and operating docs for the live Gas Town
-  rig.
+  Planner, polecat, reporter, and taxonomy assets for the live rig.
 - `research/`
-  Seed snapshots, local notes, archived diffs, and git-tracked experiment memory.
-  This includes `research/paper-ideas.md` for literature-derived hypotheses.
+  Durable notebook files, idea backlog, and reference snapshots.
+
+## What You Need
+
+- Python 3.10 or newer
+- `uv`
+- `hf` CLI
+- a Hugging Face account with Jobs access
+- a hosted Autolab account, endpoint, and API key
+- optional: Gas Town if you want planner/polecat orchestration
 
 ## Quick Start
 
-1. Load credentials:
+1. Install dependencies:
 
 ```bash
+uv sync
+```
+
+2. Create local credentials from the checked-in template:
+
+```bash
+mkdir -p ~/.autolab
+cp .autolab.credentials.example ~/.autolab/credentials
+$EDITOR ~/.autolab/credentials
 . ~/.autolab/credentials
 ```
 
-2. Authenticate to Hugging Face Jobs and create the shared cache bucket once:
+3. Validate your local operator setup:
 
 ```bash
-hf auth whoami
-hf buckets create "$AUTOLAB_HF_BUCKET" --private --exist-ok
+bash scripts/bootstrap_public.sh
+```
+
+4. Warm the shared HF cache once:
+
+```bash
 python3 scripts/hf_job.py launch --mode prepare
 ```
 
-3. Refresh to current hub master:
+5. Refresh current benchmark master:
 
 ```bash
 python3 scripts/refresh_master.py --fetch-dag
 ```
 
-4. Launch one managed benchmark job:
+This rewrites `train.py`, `train_orig.py`, and `research/live/*`. Treat those
+files as the benchmark source of truth. Do **not** use repo git history such as
+`main` or `origin/main` as benchmark truth.
+
+6. Launch one managed experiment:
 
 ```bash
 python3 scripts/hf_job.py preflight
 python3 scripts/hf_job.py launch --mode experiment
-# note the job id from the JSON output, then:
 python3 scripts/hf_job.py logs <JOB_ID> --follow --output /tmp/autolab-run.log
 python3 scripts/parse_metric.py /tmp/autolab-run.log
 ```
 
-5. Start local Trackio reporting:
+7. Submit only if the observed `val_bpb` beats current master:
 
 ```bash
-uv run scripts/trackio_reporter.py sync --project autolab
-uv run scripts/trackio_reporter.py dashboard --project autolab --mcp-server --no-footer
+python3 scripts/submit_patch.py --comment "one-sentence hypothesis and observed val_bpb"
 ```
 
-The reporter summary now calls out duplicate active jobs, bead-scoped `prepare`
-jobs, and recent worker nudges or escalations so you can recover paid slots
-before launching more work.
-
-6. If the result beats current master, submit it:
+8. Optional: start the local Trackio dashboard:
 
 ```bash
-python3 scripts/submit_patch.py --comment "one-sentence hypothesis and result"
+uv run scripts/trackio_reporter.py sync --project "${AUTOLAB_TRACKIO_PROJECT:-autolab}"
+uv run scripts/trackio_reporter.py dashboard --project "${AUTOLAB_TRACKIO_PROJECT:-autolab}" --mcp-server --no-footer
 ```
 
-`run-local.sh` remains available as a local-H100 fallback, but the checked-in
-rig defaults to Hugging Face Jobs.
+## Stable Public Entrypoints
 
-## Gas Town Setup
+These scripts are the operator-facing interface of the repo:
 
-After creating a live rig from this repo:
+- `scripts/refresh_master.py`
+- `scripts/hf_job.py`
+- `scripts/parse_metric.py`
+- `scripts/submit_patch.py`
+- `scripts/trackio_reporter.py`
+
+See [docs/script-reference.md](docs/script-reference.md) for inputs,
+environment variables, outputs, and external dependencies.
+
+## Supported Modes
+
+### Direct Operator Mode
+
+Use the scripts directly from this checkout. This is the simplest path for a
+new operator and does not require Gas Town.
+
+### Gas Town Mode
+
+Install the rig assets and use planner, polecat, researcher, and reporter
+workers:
 
 ```bash
 gt rig add autolab <repo-url>
@@ -106,44 +140,26 @@ gt rig add autolab <repo-url>
 ./scripts/install-rig-assets.sh --check ~/gt/autolab
 ```
 
-That installs the checked-in planner and polecat directives plus the autolab
-formula overlay into the rig container where Gas Town expects them. Use
-`--check` to confirm the live rig still matches the checked-in assets, and rerun
-the install command if it reports drift. The install also copies
-`research/paper-ideas.md` into the live rig root so a dedicated `researcher`
-crew worker can maintain literature findings outside any one crew clone.
+Then continue with [docs/gastown.md](docs/gastown.md).
 
-To add a dedicated paper-scout worker:
+## Contribution Model
 
-```bash
-gt crew add researcher --rig autolab
-gt crew add reporter --rig autolab
-```
+- Repo changes such as docs, helper scripts, and rig assets belong in git
+  history here.
+- Winning `train.py` diffs belong in the hosted Autolab submission system via
+  `scripts/submit_patch.py`.
+- Failed experiment history belongs in `research/notes.md`, Trackio, or Gas
+  Town beads, not as a long tail of repo commits.
 
-The live `crew` directive treats the workspace named `researcher` as a
-literature scout that searches Hugging Face papers and feeds the planner
-single-change Autolab hypotheses. The workspace named `reporter` maintains the
-local Trackio experiment board from HF Jobs status and logs.
+## Docs
 
-## Push Policy
+- [docs/getting-started.md](docs/getting-started.md)
+- [docs/hosted-backend.md](docs/hosted-backend.md)
+- [docs/script-reference.md](docs/script-reference.md)
+- [docs/gastown.md](docs/gastown.md)
+- [docs/troubleshooting.md](docs/troubleshooting.md)
+- [docs/gastown-codex-guide.md](docs/gastown-codex-guide.md)
 
-- Push harness changes, notes, helper scripts, and rig assets to this repo.
-- Submit winning `train.py` diffs to the autolab hub via the API.
-- Do not treat failed experiments as merge-worthy code history. Keep most of that
-  memory in `research/` and in beads when using Gas Town.
+## License
 
-## Current Seeds
-
-The repo is bootstrapped with the existing local work from `autolab/`:
-
-- current benchmark files at repo root
-- seed hub snapshots in `research/reference/`
-- experiment notes in `research/notes.md`
-- archived failed diff in `research/diffs/batch96.diff`
-- Gas Town autolab scaffold in `gastown/`
-
-## See Also
-
-- `docs/gastown-codex-guide.md`
-- `gastown/day-1-checklist.md`
-- `gastown/templates/experiment-bead.md`
+This repository is released under the [MIT License](LICENSE).
