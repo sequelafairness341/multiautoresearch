@@ -223,7 +223,7 @@ tmux new-session -d -s autolab-trackio \
   "cd ~/gt/autolab/crew/planner && uv run scripts/trackio_reporter.py dashboard --project autolab --mcp-server --no-footer"
 
 tmux new-session -d -s autolab-reporter \
-  "cd ~/gt/autolab/crew/planner && uv run scripts/trackio_reporter.py sync --project autolab --watch --interval 60"
+  "cd ~/gt/autolab/crew/planner && uv run scripts/trackio_reporter.py sync --project autolab --watch --interval 300"
 ```
 
 The reporter dashboard stays local to the operator machine while the metrics

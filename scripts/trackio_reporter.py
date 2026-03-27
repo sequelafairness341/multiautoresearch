@@ -588,7 +588,12 @@ def sync_once(args: argparse.Namespace) -> list[dict[str, Any]]:
 
 def sync_loop(args: argparse.Namespace) -> int:
     while True:
-        sync_once(args)
+        try:
+            sync_once(args)
+        except Exception as exc:
+            if not args.watch:
+                raise
+            print(f"trackio sync error: {exc}", file=sys.stderr, flush=True)
         if not args.watch:
             return 0
         time.sleep(args.interval)
@@ -624,7 +629,7 @@ def build_parser() -> argparse.ArgumentParser:
     sync_parser.add_argument("--tail", type=int, default=5000, help="tail this many log lines per job")
     sync_parser.add_argument("--max-jobs", type=int, default=25, help="inspect at most this many recent jobs")
     sync_parser.add_argument("--watch", action="store_true", help="keep syncing on an interval")
-    sync_parser.add_argument("--interval", type=int, default=60, help="watch interval in seconds")
+    sync_parser.add_argument("--interval", type=int, default=300, help="watch interval in seconds")
 
     summary_parser = subparsers.add_parser("summary", help="print the current autolab HF Jobs report")
     summary_parser.add_argument("--namespace", help="Hugging Face namespace that owns the jobs")

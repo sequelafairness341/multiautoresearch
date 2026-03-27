@@ -149,7 +149,7 @@ HF Jobs and maintains the experiment scoreboard.
    - `python3 scripts/refresh_master.py --fetch-dag`
 2. Sync jobs into Trackio:
    - `uv run scripts/trackio_reporter.py sync --project autolab`
-   - `uv run scripts/trackio_reporter.py sync --project autolab --watch --interval 60`
+   - `uv run scripts/trackio_reporter.py sync --project autolab --watch --interval 300`
 3. Run the local dashboard in a separate terminal or tmux pane:
    - `uv run scripts/trackio_reporter.py dashboard --project autolab --mcp-server --no-footer`
 4. Use the generated summary to update the planner, convoys, or bead notes.

@@ -34,7 +34,7 @@ Use this when turning the scaffold into a live rig.
 2. Authenticate to Hugging Face and set `AUTOLAB_HF_BUCKET`.
 3. Create the shared HF bucket once and run the `prepare` bootstrap job.
 4. Choose the default HF Jobs flavor and timeout for experiment runs.
-5. Start the local Trackio reporter and dashboard.
+5. Start the local Trackio reporter and dashboard with a conservative sync interval.
 6. Fetch the current master and full experiment DAG.
 7. Read the research history before running any experiment.
 8. Dispatch only one fresh hypothesis per paid job slot.
