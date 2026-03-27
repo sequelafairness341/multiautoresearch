@@ -23,6 +23,8 @@ orchestration code in `autoresearch-gastown`. Keep live autolab work here.
   Canonical timed local run wrapper.
 - `scripts/hf_job.py`
   Render, launch, inspect, and stream Hugging Face Jobs for the benchmark rig.
+- `scripts/trackio_reporter.py`
+  Sync HF Jobs into a local Trackio project and run the local dashboard.
 - `sitecustomize.py`
   Machine-local compatibility shim for local runs. Keep local hacks here, not in
   submitted diffs.
@@ -73,7 +75,14 @@ python3 scripts/hf_job.py logs <JOB_ID> --follow --output /tmp/autolab-run.log
 python3 scripts/parse_metric.py /tmp/autolab-run.log
 ```
 
-5. If the result beats current master, submit it:
+5. Start local Trackio reporting:
+
+```bash
+uv run scripts/trackio_reporter.py sync --project autolab
+uv run scripts/trackio_reporter.py dashboard --project autolab --mcp-server --no-footer
+```
+
+6. If the result beats current master, submit it:
 
 ```bash
 python3 scripts/submit_patch.py --comment "one-sentence hypothesis and result"
@@ -103,11 +112,13 @@ To add a dedicated paper-scout worker:
 
 ```bash
 gt crew add researcher --rig autolab
+gt crew add reporter --rig autolab
 ```
 
 The live `crew` directive treats the workspace named `researcher` as a
 literature scout that searches Hugging Face papers and feeds the planner
-single-change Autolab hypotheses.
+single-change Autolab hypotheses. The workspace named `reporter` maintains the
+local Trackio experiment board from HF Jobs status and logs.
 
 ## Push Policy
 

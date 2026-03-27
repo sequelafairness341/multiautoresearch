@@ -10,6 +10,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 import tomllib
 
@@ -18,8 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_DIR = ROOT / ".runtime"
 DEFAULT_BUNDLE = RUNTIME_DIR / "autolab-hf-job.py"
 LAST_JOB_PATH = RUNTIME_DIR / "hf-job-last.json"
+HF_JOB_STATE_DIR = RUNTIME_DIR / "hf-jobs"
 AUTOLAB_HOME = "/autolab-home"
 AUTOLAB_CACHE_MOUNT = f"{AUTOLAB_HOME}/.cache/autoresearch"
+BEAD_PATTERN = re.compile(r"\bau-[a-z0-9]+\b")
 SUMMARY_KEYS = {
     "val_bpb",
     "training_seconds",
@@ -183,7 +186,7 @@ FILES = {{
 def parse_metrics(text: str) -> dict[str, int | float | str] | None:
     metrics: dict[str, int | float | str] = {{}}
     for line in text.splitlines():
-        match = re.match(r"^([a-z_]+):\\s+(.+)$", line.strip())
+        match = re.match(r"^([A-Za-z_]+):\\s+(.+)$", line.strip())
         if not match:
             continue
         key, raw = match.groups()
@@ -328,7 +331,7 @@ def render_bundle(mode: str, output_path: Path) -> Path:
 def parse_metrics(text: str) -> dict[str, int | float | str] | None:
     metrics: dict[str, int | float | str] = {}
     for line in text.splitlines():
-        match = re.match(r"^([a-z_]+):\s+(.+)$", line.strip())
+        match = re.match(r"^([A-Za-z_]+):\s+(.+)$", line.strip())
         if not match:
             continue
         key, raw = match.groups()
@@ -343,6 +346,131 @@ def parse_metrics(text: str) -> dict[str, int | float | str] | None:
                 continue
         metrics[key] = value
     return metrics if "val_bpb" in metrics else None
+
+
+def now_utc_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def load_json_file(path: Path) -> dict[str, object] | None:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def git_output(*argv: str) -> str | None:
+    result = subprocess.run(
+        list(argv),
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    value = result.stdout.strip()
+    return value or None
+
+
+def slugify_label_value(value: str, max_len: int = 48) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
+    if not slug:
+        return ""
+    return slug[:max_len].rstrip("_")
+
+
+def branch_context(branch: str | None) -> dict[str, str]:
+    context: dict[str, str] = {}
+    if not branch:
+        return context
+    context["branch"] = branch
+    bead_match = BEAD_PATTERN.search(branch)
+    if bead_match:
+        context["bead_id"] = bead_match.group(0)
+    if branch.startswith("polecat/"):
+        parts = branch.split("/")
+        if len(parts) >= 3:
+            context["polecat"] = parts[1]
+    return context
+
+
+def bead_details(bead_id: str | None) -> dict[str, str]:
+    if not bead_id:
+        return {}
+    result = subprocess.run(
+        ["bd", "show", "--json", "--long", f"--id={bead_id}"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        return {}
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return {}
+    record: dict[str, object] | None
+    if isinstance(payload, list):
+        record = payload[0] if payload else None
+    elif isinstance(payload, dict):
+        record = payload
+    else:
+        record = None
+    if not isinstance(record, dict):
+        return {}
+
+    details: dict[str, str] = {}
+    for key in ("title", "status", "assignee"):
+        value = record.get(key)
+        if isinstance(value, str) and value:
+            details[f"bead_{key}"] = value
+    title = details.get("bead_title")
+    if title:
+        title_suffix = title.split(":", 1)[-1].strip()
+        slug = slugify_label_value(title_suffix)
+        if slug:
+            details["hypothesis"] = slug
+    return details
+
+
+def collect_launch_context() -> dict[str, object]:
+    context: dict[str, object] = {
+        "workspace": str(ROOT),
+        "launched_at": now_utc_iso(),
+    }
+
+    git_commit = git_output("git", "rev-parse", "HEAD")
+    if git_commit:
+        context["git_commit"] = git_commit
+
+    branch = git_output("git", "rev-parse", "--abbrev-ref", "HEAD")
+    context.update(branch_context(branch))
+
+    master_data = load_json_file(ROOT / "research" / "live" / "master.json")
+    if master_data:
+        master_hash = master_data.get("hash")
+        master_val_bpb = master_data.get("val_bpb")
+        if isinstance(master_hash, str) and master_hash:
+            context["master_hash"] = master_hash
+        if isinstance(master_val_bpb, (int, float)):
+            context["master_val_bpb"] = master_val_bpb
+
+    env_override = os.environ.get("AUTOLAB_HYPOTHESIS")
+    if env_override:
+        slug = slugify_label_value(env_override)
+        if slug:
+            context["hypothesis"] = slug
+
+    bead_id = context.get("bead_id")
+    if isinstance(bead_id, str):
+        context.update(bead_details(bead_id))
+
+    return context
 
 
 def resolve_bucket(explicit: str | None) -> str | None:
@@ -377,20 +505,25 @@ def default_timeout(mode: str) -> str:
     return env_map.get(mode) or fallback[mode]
 
 
-def build_job_labels(mode: str) -> list[str]:
+def build_job_labels(mode: str, context: dict[str, object] | None = None) -> list[str]:
     labels = [
         "autolab",
         f"mode={mode}",
         "launcher=hf-job-py",
     ]
-    master_json = ROOT / "research" / "live" / "master.json"
-    if master_json.exists():
-        try:
-            master_hash = json.loads(master_json.read_text()).get("hash")
-        except json.JSONDecodeError:
-            master_hash = None
-        if isinstance(master_hash, str) and master_hash:
-            labels.append(f"master={master_hash[:12]}")
+    ctx = context or {}
+    master_hash = ctx.get("master_hash")
+    if isinstance(master_hash, str) and master_hash:
+        labels.append(f"master={master_hash[:12]}")
+    bead_id = ctx.get("bead_id")
+    if isinstance(bead_id, str) and bead_id:
+        labels.append(f"bead={bead_id}")
+    polecat = ctx.get("polecat")
+    if isinstance(polecat, str) and polecat:
+        labels.append(f"polecat={slugify_label_value(polecat)}")
+    hypothesis = ctx.get("hypothesis")
+    if isinstance(hypothesis, str) and hypothesis:
+        labels.append(f"hypothesis={slugify_label_value(hypothesis)}")
     return labels
 
 
@@ -403,6 +536,26 @@ def run_command(argv: list[str], capture_output: bool = False) -> subprocess.Com
     env = os.environ.copy()
     env.setdefault("HF_HUB_DISABLE_EXPERIMENTAL_WARNING", "1")
     return subprocess.run(argv, text=True, capture_output=capture_output, check=False, env=env)
+
+
+def parse_label_entries(entries: list[str]) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for entry in entries:
+        if "=" in entry:
+            key, value = entry.split("=", 1)
+            labels[key] = value
+        else:
+            labels[entry] = ""
+    return labels
+
+
+def persist_job_state(state: dict[str, object]) -> None:
+    job_id = state.get("job_id")
+    if not isinstance(job_id, str) or not job_id:
+        return
+    HF_JOB_STATE_DIR.mkdir(parents=True, exist_ok=True)
+    path = HF_JOB_STATE_DIR / f"{job_id}.json"
+    path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def resolve_hf_cli() -> str:
@@ -434,6 +587,7 @@ def launch_job(args: argparse.Namespace) -> int:
     if args.mode in {"prepare", "experiment"} and not bucket:
         raise SystemExit("AUTOLAB_HF_BUCKET is required for prepare and experiment jobs")
 
+    context = collect_launch_context()
     bundle_path = render_bundle(args.mode, args.output)
     flavor = args.flavor or default_flavor(args.mode)
     timeout = args.timeout or default_timeout(args.mode)
@@ -447,7 +601,8 @@ def launch_job(args: argparse.Namespace) -> int:
         command.extend(["--namespace", args.namespace])
     if args.detach:
         command.append("--detach")
-    for label in build_job_labels(args.mode) + args.label:
+    label_entries = build_job_labels(args.mode, context) + args.label
+    for label in label_entries:
         command.extend(["--label", label])
     for env_entry in args.env:
         command.extend(["--env", env_entry])
@@ -475,7 +630,9 @@ def launch_job(args: argparse.Namespace) -> int:
         "hf_cli": hf_cli,
         "timeout": timeout,
         "command": command,
+        "labels": parse_label_entries(label_entries),
     }
+    state.update(context)
     job_id = parse_job_id(combined_output)
     if job_id:
         state["job_id"] = job_id
@@ -483,6 +640,7 @@ def launch_job(args: argparse.Namespace) -> int:
         state["namespace"] = args.namespace
     LAST_JOB_PATH.parent.mkdir(parents=True, exist_ok=True)
     LAST_JOB_PATH.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    persist_job_state(state)
     print(json.dumps(state, indent=2, sort_keys=True))
     return 0
 

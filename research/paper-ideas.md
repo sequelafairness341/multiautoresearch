@@ -90,3 +90,54 @@ Rules:
   interesting but less aligned with the fixed short-budget Autolab benchmark.
 - Structured FFN or architecture-replacement papers:
   too invasive for disciplined one-change comparisons here.
+
+## Additional Ranked Candidates
+
+### Local-global window interleave
+
+- Paper: `2408.00118`
+- Why it matches this repo:
+  - `WINDOW_PATTERN` is already an explicit layerwise attention-pattern knob
+  - switching from `SSSL` to `SLSL` is a one-string architectural test, not a
+    subsystem rewrite
+- Smallest credible experiment:
+  - change only `WINDOW_PATTERN` from `"SSSL"` to `"SLSL"`
+- Main risk:
+  - a denser global pattern may buy quality at the cost of throughput or memory
+
+### Grouped-query attention
+
+- Paper: `2305.13245`
+- Why it matches this repo:
+  - attention already supports `n_kv_head <= n_head`
+  - the current builder still ties `n_kv_head = num_heads`, so halving KV heads
+    is a clean existing-capability toggle
+- Smallest credible experiment:
+  - set `n_kv_head = num_heads // 2`
+- Main risk:
+  - this changes parameter count and attention cache structure, so compare it
+    carefully against optimizer-only wins
+
+### Denser value-embedding cadence
+
+- Paper: `2410.17897`
+- Why it matches this repo:
+  - the model already has explicit value-embedding placement and gating logic
+  - recent wins suggest this subsystem is live rather than decorative
+- Smallest credible experiment:
+  - change `has_ve()` cadence from every third layer to every second layer
+- Main risk:
+  - this is adjacent to the current value-embedding regularization line, so keep
+    it isolated from any weight-decay changes
+
+### Attention branch scale reset
+
+- Paper: `2305.02790`
+- Why it matches this repo:
+  - the block already hardcodes a non-residual attention amplification
+  - testing `1.0` versus `1.3` is a scalar-only branch-balance experiment
+- Smallest credible experiment:
+  - change the attention branch scale from `1.3` to `1.0`
+- Main risk:
+  - the current scale may already be compensating for another architectural
+    choice, so this can regress sharply

@@ -1,13 +1,16 @@
 ## Autolab Crew Policy
 
-This rig uses one `crew` role for two distinct jobs:
+This rig uses one `crew` role for three distinct jobs:
 
 - `planner`
   the research planner and dispatcher
 - `researcher`
   the literature scout and hypothesis synthesizer
+- `reporter`
+  the HF Jobs and Trackio observer
 
 If your crew workspace basename is `researcher`, follow Researcher Mode below.
+If it is `reporter`, follow Reporter Mode below.
 Otherwise follow Planner Mode.
 
 Your primary job is to maximize useful experiments per paid GPU-hour, not to
@@ -125,3 +128,47 @@ Do not:
 - propose multi-knob experiments
 - dispatch polecats directly without planner approval
 - claim a paper idea is a win without a timed benchmark
+
+## Reporter Mode
+
+The `reporter` crew member keeps the local Trackio project in sync with managed
+HF Jobs and maintains the experiment scoreboard.
+
+### Responsibilities
+
+- refresh the current hub master and recent experiment state before reporting
+- ingest recent HF Jobs into local Trackio with job, score, and step metrics
+- keep a durable view of active jobs, completed runs, and failed runs
+- surface wins, regressions, and stuck jobs to the planner quickly
+- avoid inventing metrics or filling notebook gaps from memory
+
+### Reporting Workflow
+
+1. Run:
+   - `. ~/.autolab/credentials`
+   - `python3 scripts/refresh_master.py --fetch-dag`
+2. Sync jobs into Trackio:
+   - `uv run scripts/trackio_reporter.py sync --project autolab`
+   - `uv run scripts/trackio_reporter.py sync --project autolab --watch --interval 60`
+3. Run the local dashboard in a separate terminal or tmux pane:
+   - `uv run scripts/trackio_reporter.py dashboard --project autolab --mcp-server --no-footer`
+4. Use the generated summary to update the planner, convoys, or bead notes.
+
+### Deliverable Bar
+
+Every reporter update should make it easy to answer:
+
+- which jobs are still running
+- which runs are the current leaderboard
+- which bead maps to each managed job
+- which failures need follow-up or cleanup
+- whether the best completed run beats current master
+
+### Reporter Anti-Patterns
+
+Do not:
+
+- treat Trackio as write-only and skip readable summaries
+- report only wins while hiding cancellations and errors
+- mix planner strategy changes into the reporter role
+- hand-edit metrics that should come from HF Jobs logs

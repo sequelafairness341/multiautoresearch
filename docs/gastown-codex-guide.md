@@ -204,6 +204,31 @@ This path mounts the shared HF bucket at the benchmark cache location, so
 `prepare.py` stays unchanged and the expensive tokenizer plus shard bootstrap is
 reused across jobs.
 
+## Local Trackio Reporting
+
+Use one dedicated control-plane worker to keep reporting current while
+experiments run elsewhere.
+
+One-time setup:
+
+```bash
+gt crew add reporter --rig autolab
+uv run scripts/trackio_reporter.py sync --project autolab
+```
+
+Recommended tmux sessions:
+
+```bash
+tmux new-session -d -s autolab-trackio \
+  "cd ~/gt/autolab/crew/planner && uv run scripts/trackio_reporter.py dashboard --project autolab --mcp-server --no-footer"
+
+tmux new-session -d -s autolab-reporter \
+  "cd ~/gt/autolab/crew/planner && uv run scripts/trackio_reporter.py sync --project autolab --watch --interval 60"
+```
+
+The reporter dashboard stays local to the operator machine while the metrics
+come from HF Jobs logs, not from manual copy-paste.
+
 ## Keep GPU Capacity Honest
 
 Treat `scheduler.max_polecats` as the paid-job governor.
@@ -265,6 +290,14 @@ Bootstrap the shared cache once:
 
 ```bash
 python3 scripts/hf_job.py launch --mode prepare
+```
+
+If you want the local control plane to keep a live experiment board, also start
+Trackio locally:
+
+```bash
+uv run scripts/trackio_reporter.py sync --project autolab
+uv run scripts/trackio_reporter.py dashboard --project autolab --mcp-server --no-footer
 ```
 
 ### 3. Prepare a benchmark workspace

@@ -12,9 +12,11 @@ Use this when turning the scaffold into a live rig.
    - `formula-overlays/mol-polecat-work.toml`
 4. Decide who is the planner:
    - one crew worker or the Mayor
-5. Optionally add one dedicated literature scout:
+5. Optionally add one dedicated reporter:
+   - `gt crew add reporter --rig autolab`
+6. Optionally add one dedicated literature scout:
    - `gt crew add researcher --rig autolab`
-6. Set scheduler capacity to the number of concurrent HF Jobs you are willing
+7. Set scheduler capacity to the number of concurrent HF Jobs you are willing
    to pay for.
 
 ## Research Discipline
@@ -32,9 +34,10 @@ Use this when turning the scaffold into a live rig.
 2. Authenticate to Hugging Face and set `AUTOLAB_HF_BUCKET`.
 3. Create the shared HF bucket once and run the `prepare` bootstrap job.
 4. Choose the default HF Jobs flavor and timeout for experiment runs.
-5. Fetch the current master and full experiment DAG.
-6. Read the research history before running any experiment.
-7. Dispatch only one fresh hypothesis per paid job slot.
+5. Start the local Trackio reporter and dashboard.
+6. Fetch the current master and full experiment DAG.
+7. Read the research history before running any experiment.
+8. Dispatch only one fresh hypothesis per paid job slot.
 
 If you use a local fallback instead of HF Jobs, treat it as valid only when the
 host is already a trusted comparable runner.
