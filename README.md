@@ -29,6 +29,9 @@ hosted Autolab service plus Hugging Face Jobs.
 If you only want to try the project, use the direct operator path below. You do
 not need Gas Town for a first run.
 
+If you specifically want the rig workflow from the start, skip to
+[Quick Start With Gas Town](#quick-start-with-gas-town).
+
 ### 1. Clone And Install
 
 ```bash
@@ -103,6 +106,54 @@ python3 scripts/parse_metric.py /tmp/autolab-run.log
 ```bash
 python3 scripts/submit_patch.py --comment "one-sentence hypothesis and observed val_bpb"
 ```
+
+## Quick Start With Gas Town
+
+Use this path if you want planner, polecat, researcher, and reporter workers
+from the beginning instead of running the scripts by hand.
+
+### 1. Prove The Base Setup First
+
+Complete these direct-mode steps first:
+
+- create `~/.autolab/credentials`
+- run `hf auth login`
+- run `bash scripts/bootstrap_public.sh`
+
+That isolates Hugging Face and hosted-backend issues before Gas Town enters the
+loop.
+
+### 2. Create The Rig
+
+```bash
+gt rig add autolab https://github.com/burtenshaw/autolab-gastown.git
+./scripts/install-rig-assets.sh ~/gt/autolab
+./scripts/install-rig-assets.sh --check ~/gt/autolab
+```
+
+### 3. Add The Control-Plane Workers
+
+```bash
+cd ~/gt/autolab
+gt crew add researcher --rig autolab
+gt crew add reporter --rig autolab
+```
+
+### 4. Start Working
+
+The common operator pattern is:
+
+```bash
+cd ~/gt/autolab/crew/planner
+. ~/.autolab/credentials
+python3 scripts/refresh_master.py --fetch-dag
+gt convoy create "optimizer: first autolab run" <BEAD_ID>
+gt sling <BEAD_ID> autolab --agent codex
+```
+
+For the full role split and daily workflow, continue with
+[docs/gastown.md](docs/gastown.md) and
+[docs/gastown-codex-guide.md](docs/gastown-codex-guide.md).
 
 ## First Run Rules
 
