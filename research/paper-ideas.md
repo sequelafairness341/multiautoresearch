@@ -114,6 +114,31 @@ Context:
   - changing both the cooldown shape and floor at once would make attribution
     poor
 
+### Cooldown-stage variants
+
+- Papers:
+  - `2502.15938` "Straight to Zero: Why Linearly Decaying the Learning Rate to Zero Works Best for LLMs"
+  - `2508.01483` "Training Dynamics of the Cooldown Stage in Warmup-Stable-Decay Learning Rate Scheduler"
+  - `2410.05192` "Understanding Warmup-Stable-Decay Learning Rates: A River Valley Loss Landscape Perspective"
+- Why they match this repo:
+  - the scheduler is still concentrated in `get_lr_multiplier()` plus two scalar
+    constants, so each cooldown-stage test can remain a one-function or
+    one-constant change in `train.py`
+  - these papers distinguish the floor choice, cooldown duration, and cooldown
+    curve, which maps directly onto `FINAL_LR_FRAC`, `WARMDOWN_RATIO`, and the
+    interpolation logic here
+- Smallest credible experiments:
+  - set only `FINAL_LR_FRAC = 0.0` to test a straight-to-zero tail
+  - set only `WARMDOWN_RATIO = 0.90` to lengthen the cooldown phase
+  - replace only the linear cooldown interpolation with a cosine interpolation
+    while keeping the same floor and cooldown duration
+- Keep it single-change:
+  - do not combine a zero floor with a new cooldown shape in the same bead
+  - do not move both `WARMDOWN_RATIO` and `FINAL_LR_FRAC` together
+- Main risk:
+  - scheduler-only gains can be easy to overfit with multiple adjacent sweeps, so
+    stagger these across separate beads instead of treating them as a bundle
+
 ### Gradient-preserving activation scaling
 
 - Paper: `2506.22049` "GPAS: Accelerating Convergence of LLM Pretraining via

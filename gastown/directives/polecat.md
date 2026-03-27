@@ -9,6 +9,11 @@ Your job is to execute one benchmark experiment cleanly and report the result.
 - Edit `train.py` only unless the assigned bead explicitly says otherwise.
 - Never modify `prepare.py`.
 - Start from current master, not from your prior local branch.
+- For benchmark freshness, trust `python3 scripts/refresh_master.py --fetch-dag`,
+  `research/live/master.json`, and `train_orig.py`.
+- Do not use repo git `main` or `origin/main` as the benchmark-master check in
+  this rig; those refs can contain control-plane commits unrelated to the live
+  benchmark source.
 - Make exactly one hypothesis change per experiment bead.
 - Do not bundle multiple ideas into one patch.
 - If master changed materially while you were working, record that fact and ask for replanning instead of improvising.

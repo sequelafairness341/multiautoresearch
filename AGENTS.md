@@ -12,6 +12,10 @@ single-change experiments.
 - Edit `train.py` only unless the task explicitly says otherwise.
 - Never modify `prepare.py`.
 - Start from current hub master, not stale local history.
+- Treat `python3 scripts/refresh_master.py --fetch-dag`, `research/live/master.json`,
+  and `train_orig.py` as the benchmark-master source of truth.
+- Do not use repo git history such as `main` or `origin/main` to decide whether
+  an experiment is fresh; this repository also carries rig/control-plane commits.
 - Make exactly one hypothesis change per run.
 - Run the timed benchmark before claiming success.
 - Submit only if local `val_bpb` beats current master.
@@ -37,6 +41,7 @@ Per experiment:
 
 1. Refresh from the hub:
    - `python3 scripts/refresh_master.py --fetch-dag`
+   - this rewrite of `train.py` and `train_orig.py` defines the benchmark base
 2. Edit `train.py`.
 3. Launch one managed benchmark job:
    - `python3 scripts/hf_job.py launch --mode experiment`

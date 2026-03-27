@@ -19,6 +19,8 @@ maximize agent activity.
 ## Shared Rules
 
 - stay grounded in current hub master and refreshed DAG state
+- treat `refresh_master.py`, `research/live/master.json`, and `train_orig.py`
+  as the benchmark-master source of truth, not repo git `main`/`origin/main`
 - keep a durable do-not-repeat memory
 - prefer narrow, legible hypotheses over broad rewrites
 - never turn paper novelty into multi-change slop

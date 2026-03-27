@@ -28,6 +28,10 @@ one managed benchmark run.
 - Treat `train_orig.py` as the refreshed hub-master base. If preflight reports
   multiple known hypothesis categories, stop and inspect the diff before
   launching.
+- Ignore repo git `main` and `origin/main` when judging freshness. In this rig
+  repo those refs describe control-plane history, not the benchmark master. The
+  comparable base is whatever `refresh_master.py` just wrote into
+  `train_orig.py` and `research/live/master.json`.
 - Never run `python3 scripts/hf_job.py launch --mode prepare` from a bead
   worktree. `prepare` is rig-wide bootstrap work, not per-experiment work.
 - Do not launch a second experiment job for the same bead unless you have a
