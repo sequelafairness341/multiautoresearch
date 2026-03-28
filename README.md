@@ -98,8 +98,9 @@ gt sling <BEAD_ID> autolab --agent codex
 ```
 
 At that point the planner and polecats own the benchmark loop. For the full
-role split and daily workflow, continue with [docs/gastown.md](docs/gastown.md)
-and [docs/gastown-codex-guide.md](docs/gastown-codex-guide.md).
+role split and daily workflow, continue with [docs/gastown.md](docs/gastown.md),
+[docs/gastown-investigation.md](docs/gastown-investigation.md), and
+[docs/gastown-codex-guide.md](docs/gastown-codex-guide.md).
 
 ## First Run Rules
 
@@ -150,6 +151,7 @@ environment variables, outputs, and external dependencies.
 - [docs/hosted-backend.md](docs/hosted-backend.md)
 - [docs/script-reference.md](docs/script-reference.md)
 - [docs/gastown.md](docs/gastown.md)
+- [docs/gastown-investigation.md](docs/gastown-investigation.md)
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/gastown-codex-guide.md](docs/gastown-codex-guide.md)
 

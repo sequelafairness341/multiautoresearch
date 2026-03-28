@@ -80,5 +80,8 @@ specialized control-plane roles.
 
 ## Detailed Guide
 
+For the shortest path to investigating a live bead, worker, or job, see
+[gastown-investigation.md](gastown-investigation.md).
+
 For the longer operator walkthrough, see
 [gastown-codex-guide.md](gastown-codex-guide.md).
