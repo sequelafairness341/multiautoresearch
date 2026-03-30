@@ -1,19 +1,59 @@
 # autolab-rig
 
-Public operator repository for running Autolab experiments with Gas Town and
-Hugging Face Jobs.
+Concrete repository for running autolab with Gas Town, Codex, or Claude Code
+subagents.
 
 This repo does **not** bundle the Autolab backend itself. You need access to a
 hosted Autolab service plus Hugging Face Jobs.
 
-## What You Need
+- the live benchmark harness at repo root
+- local research notes and seeded hub snapshots under `research/`
+- Gas Town rig assets under `gastown/`
+- Codex subagent configs and templates under `.codex/` and `codex/`
+- Claude Code project memory, settings, and templates under `CLAUDE.md`,
+  `.claude/`, and `claude/`
 
-- Python 3.10 or newer
-- `uv`
-- `hf` CLI
-- a Hugging Face account with Jobs access
-- a hosted Autolab account, endpoint, and API key
-- Gas Town
+It is intentionally separate from the Gas Town source repo. Keep reusable
+orchestration code in `autoresearch-gastown`. Keep live autolab work here.
+
+## Layout
+
+- `train.py`
+  Working experiment file. This is the only file most experiments should edit.
+- `train_orig.py`
+  Local copy of the current hub master used as the diff base.
+- `prepare.py`
+  Read-only benchmark setup and evaluation logic.
+- `run-local.sh`
+  Canonical timed local run wrapper.
+- `sitecustomize.py`
+  Machine-local compatibility shim for local runs. Keep local hacks here, not in
+  submitted diffs.
+- `CLAUDE.md`
+  Claude Code project-memory entrypoint. It imports the repo's shared
+  instructions and Claude-specific workflow guide.
+- `scripts/refresh_master.py`
+  Refresh `train.py`, `train_orig.py`, and live hub snapshots from the autolab
+  API.
+- `scripts/submit_patch.py`
+  Generate a unified diff and submit it to the autolab API.
+- `scripts/parse_metric.py`
+  Parse the final metric block from a local run log.
+- `scripts/install-rig-assets.sh`
+  Copy the checked-in Gas Town rig assets into a live `~/gt/<rig>/` layout.
+- `gastown/`
+  Rig directives, overlays, templates, and operating docs for the live Gas Town
+  rig.
+- `.codex/`
+  Repo-scoped Codex configuration plus custom planner/worker/reviewer agents.
+- `codex/`
+  Templates and guides for the Codex-native research workflow.
+- `.claude/`
+  Repo-scoped Claude Code settings plus custom planner/worker/reviewer agents.
+- `claude/`
+  Templates and guides for the Claude Code-native research workflow.
+- `research/`
+  Seed snapshots, local notes, archived diffs, and git-tracked experiment memory.
 
 ## Quick Start
 
@@ -127,11 +167,38 @@ If you want to use the benchmark scripts directly without Gas Town, see
 
 These scripts are the operator-facing interface of the repo:
 
-- `scripts/refresh_master.py`
-- `scripts/hf_job.py`
-- `scripts/parse_metric.py`
-- `scripts/submit_patch.py`
-- `scripts/trackio_reporter.py`
+## Codex Subagents Setup
+
+Codex can run this repo directly from the project root using the checked-in
+project config and custom agents:
+
+```bash
+python3 scripts/print_codex_kickoff.py --gpu-slots 1
+codex
+```
+
+The Codex-native workflow is documented in `docs/codex-subagents-guide.md`.
+Unlike the Gas Town flow, there is no separate rig-install step: Codex reads the
+repo-local `.codex/` config in place.
+
+## Claude Code Subagents Setup
+
+Claude Code can run this repo directly from the project root using `CLAUDE.md`,
+the checked-in `.claude/agents/`, and the repo-scoped settings file:
+
+```bash
+python3 scripts/print_claude_kickoff.py --gpu-slots 1
+claude
+```
+
+The Claude-native workflow is documented in `docs/claude-subagents-guide.md`.
+The checked-in `experiment-worker` agent runs as a background task in its own
+worktree so parallel workers do not collide on checkout state. For multiple
+top-level Claude sessions, use `claude --worktree <name>`. After each worker
+finishes, use `memory-keeper` in the main checkout to persist the result into
+the shared research notebook.
+
+## Push Policy
 
 See [docs/script-reference.md](docs/script-reference.md) for inputs,
 environment variables, outputs, and external dependencies.
@@ -145,7 +212,13 @@ environment variables, outputs, and external dependencies.
 - Failed experiment history belongs in `research/notes.md`, Trackio, or Gas
   Town beads, not as a long tail of repo commits.
 
-## Docs
+- current benchmark files at repo root
+- seed hub snapshots in `research/reference/`
+- experiment notes in `research/notes.md`
+- archived failed diff in `research/diffs/batch96.diff`
+- Gas Town autolab scaffold in `gastown/`
+- Codex repo-native scaffold in `.codex/` and `codex/`
+- Claude Code repo-native scaffold in `CLAUDE.md`, `.claude/`, and `claude/`
 
 - [docs/getting-started.md](docs/getting-started.md)
 - [docs/hosted-backend.md](docs/hosted-backend.md)
@@ -155,6 +228,10 @@ environment variables, outputs, and external dependencies.
 - [docs/troubleshooting.md](docs/troubleshooting.md)
 - [docs/gastown-codex-guide.md](docs/gastown-codex-guide.md)
 
-## License
-
-This repository is released under the [MIT License](LICENSE).
+- `docs/gastown-codex-guide.md`
+- `docs/codex-subagents-guide.md`
+- `docs/claude-subagents-guide.md`
+- `gastown/day-1-checklist.md`
+- `gastown/templates/experiment-bead.md`
+- `codex/templates/experiment-task.md`
+- `claude/templates/experiment-task.md`

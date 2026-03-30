@@ -141,9 +141,12 @@ daemon swarm:
 ```bash
 gt convoy create "optimizer: initial follow-ups" <bead-id>
 gt sling <bead-id> autolab --agent codex-low
-cd ~/gt/autolab/polecats/<worker-name>/rig
+cd ~/gt/autolab/polecats/<worker-name>/autolab
 codex
 ```
+
+Crew workspaces in this Gas Town build live at `~/gt/<rig>/crew/<name>/`, not
+`~/gt/<rig>/crew/<name>/rig`.
 
 If a session comes up without full role context, run:
 

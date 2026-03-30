@@ -52,12 +52,41 @@ Per experiment:
 6. Submit if improved:
    - `python3 scripts/submit_patch.py --comment "..."`
 
+## Codex Subagents
+
+- Repo-scoped Codex config lives in `.codex/`.
+- Custom planner, worker, reviewer, and memory agents live in `.codex/agents/`.
+- Durable Codex-native workflow docs and templates live in `codex/` plus
+  `research/campaigns/`, `research/experiments/`, and
+  `research/do-not-repeat.md`.
+- Active `experiment_worker` count must never exceed real GPU capacity.
+- Planner and reviewer agents should stay read-only; experiment workers own the
+  benchmark run.
+
+## Claude Code Subagents
+
+- Project memory entrypoint lives in `CLAUDE.md`.
+- Repo-scoped Claude settings and custom agents live in `.claude/`.
+- Durable Claude-native workflow docs and templates live in `claude/` plus
+  `research/campaigns/`, `research/experiments/`, and
+  `research/do-not-repeat.md`.
+- Active `experiment-worker` count must never exceed real GPU capacity.
+- Planner and reviewer should stay read-only; experiment workers run in
+  isolated worktrees and own the benchmark run.
+- Persist worker results back into the shared notebook with `memory-keeper` in
+  the main checkout.
+
 ## Repo Layout
 
 - Root benchmark files are the experiment surface.
+- `CLAUDE.md` is the Claude Code project-memory entrypoint.
 - `research/` is the durable experiment notebook.
 - `gastown/` contains the rig assets that should be installed into a live
   `~/gt/<rig>/` container with `scripts/install-rig-assets.sh`.
+- `.codex/` contains repo-scoped Codex configuration and custom subagents.
+- `codex/` contains templates and operator docs for Codex-native orchestration.
+- `.claude/` contains repo-scoped Claude Code settings and custom subagents.
+- `claude/` contains templates and operator docs for Claude Code orchestration.
 
 ## Literature Scouting
 

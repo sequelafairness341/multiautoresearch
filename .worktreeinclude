@@ -1,0 +1,2 @@
+# Copy per-developer Claude project overrides into Claude worktrees when present.
+.claude/settings.local.json
