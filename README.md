@@ -1,17 +1,10 @@
-# open lab
+# Multi-Agent Autoresearch
 
-This repo is a self-contained Open Source AI Lab.
+This repo is a self-contained Open Source AI Lab that researches papers, manages experiments, runs GPUs, and repeats. It is based on [autoresearch](https://github.com/karpathy/autoresearch) by Andrej Karpathy.
 
-There is no hosted benchmark backend in the active workflow. The current local
-benchmark truth is:
+<img width="2468" height="985" alt="gastown_wave2_running_jobs" src="https://github.com/user-attachments/assets/e1ae62ed-7a7a-4ba3-9e68-6fa97a4d86c8" />
 
-- `train_orig.py`
-- `research/live/master.json`
-- `research/results.tsv`
-
-OpenCode is the primary way to use this repo. The checked-in agents and
-[`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md) tell the agent which
-scripts to run and how to use them safely.
+OpenCode is the primary way to use this repo. The checked-in agents and [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md) tell the agent which scripts to run and how to use them safely. Hoever, there are also implementations for Codex and Claude Code.
 
 ## What This Repo Contains
 
