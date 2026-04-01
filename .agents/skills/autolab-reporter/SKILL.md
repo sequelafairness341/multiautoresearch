@@ -1,6 +1,11 @@
 ---
 name: autolab-reporter
 description: "Operate the local Trackio reporter for Autolab HF Jobs. Use when a reporter or planner needs to inspect scores, active jobs, worker anomalies, duplicate launches, or the overall experiment board."
+version: 1.0.0
+metadata:
+  hermes:
+    category: autolab
+    requires_toolsets: [terminal]
 ---
 
 Use this for the control-plane view of the experiment fleet.

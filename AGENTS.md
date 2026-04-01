@@ -129,6 +129,10 @@ run:
 - `autolab-managed-experiment`
   Use for any single planned experiment that should become exactly one managed
   HF Jobs run.
+- `autolab-hermes-delegation`
+  Use when Hermes is the parent control plane and the repo should drive
+  planner, reviewer, researcher, reporter, experiment-worker, and
+  memory-keeper roles through explicit `delegate_task(...)` contracts.
 - `autolab-reporter`
   Use for Trackio, active-job review, anomaly review, and experiment-board
   summaries.

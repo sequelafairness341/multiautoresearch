@@ -4,7 +4,7 @@ This repo is a self-contained Open Source AI Lab that researches papers, manages
 
 <img width="2468" height="985" alt="gastown_wave2_running_jobs" src="https://github.com/user-attachments/assets/e1ae62ed-7a7a-4ba3-9e68-6fa97a4d86c8" />
 
-OpenCode is the primary way to use this repo. The checked-in agents and [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md) tell the agent which scripts to run and how to use them safely. Hoever, there are also implementations for Codex and Claude Code.
+OpenCode is the primary way to use this repo. The checked-in agents and [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md) tell the agent which scripts to run and how to use them safely. There is also a Hermes delegation adapter, plus older Codex and Claude Code material.
 
 ## What This Repo Contains
 
@@ -33,11 +33,34 @@ uv sync
 hf auth login
 hf auth whoami
 opencode auth login
+# optional for Hermes:
+hermes setup
 ```
 
 If you have not warmed the shared Hugging Face cache yet, you can ask OpenCode
 to do that as part of the first session. The exact script path is already in
 [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md).
+
+## Start Hermes
+
+From the repo root:
+
+```bash
+uv run scripts/setup_hermes_profile.py --profile autolab
+uv run scripts/print_hermes_kickoff.py --gpu-slots 1
+autolab chat --toolsets "terminal,file,web,skills,delegation,clarify"
+```
+
+Hermes loads [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md)
+automatically, so the repo intentionally does not ship `.hermes.md`.
+
+Use the parent Hermes session to delegate planner, reviewer, researcher,
+reporter, experiment-worker, and memory-keeper roles. Keep Hermes child
+concurrency at 3 or fewer per parent session. Use
+`uv run scripts/hermes_worker.py create ...` plus
+`uv run scripts/hermes_worker.py delegate <experiment-id>` to reserve each
+experiment worktree and print the exact `delegate_task(...)` payload for the
+worker.
 
 ## Start OpenCode
 
@@ -122,6 +145,8 @@ the repo scripts, HF Jobs, HF buckets, and the local results ledger.
   Repo rules and the agent operating contract.
 - [docs/opencode-workflow.md](/Users/ben/code/open-autolab/docs/opencode-workflow.md)
   Full parent-session and worker workflow.
+- [docs/hermes-subagents-guide.md](/Users/ben/code/open-autolab/docs/hermes-subagents-guide.md)
+  Hermes profile, kickoff, and delegation workflow.
 - [docs/claude-subagents-guide.md](/Users/ben/code/open-autolab/docs/claude-subagents-guide.md)
   Optional secondary Claude Code-native integration.
 - [docs/codex-subagents-guide.md](/Users/ben/code/open-autolab/docs/codex-subagents-guide.md)

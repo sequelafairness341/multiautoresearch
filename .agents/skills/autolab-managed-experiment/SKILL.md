@@ -1,6 +1,11 @@
 ---
 name: autolab-managed-experiment
 description: "Run one Autolab benchmark experiment safely on Hugging Face Jobs. Use when a planner, reviewer, or experiment worker is preparing, auditing, launching, or reviewing a single train.py hypothesis against the current local promoted master."
+version: 1.0.0
+metadata:
+  hermes:
+    category: autolab
+    requires_toolsets: [terminal]
 ---
 
 Use this for any single Autolab experiment that should result in exactly one

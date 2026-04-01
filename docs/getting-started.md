@@ -9,6 +9,7 @@ promoted master plus Hugging Face Jobs and Trackio.
 - `uv`
 - `hf` CLI
 - `opencode`
+- optional: `hermes`
 - a Hugging Face account with Jobs access
 
 ## 1. Clone And Install
@@ -87,7 +88,19 @@ opencode
 Choose Hugging Face and an open model through Hugging Face Inference Providers.
 Do not pin a single exact model id in repo config.
 
-## 7. Start The Parent Session
+## 7. Optional: Set Up The Hermes Profile
+
+```bash
+uv run scripts/setup_hermes_profile.py --profile autolab
+autolab setup
+```
+
+The setup script keeps Hermes profile state in your home directory, wires in
+the repo's shared skills, and leaves `AGENTS.md` as the only checked-in repo
+rulebook for Hermes. It also keeps profile-wide `worktree: true` disabled so
+the parent session stays in the main checkout.
+
+## 8. Start The Parent Session
 
 ```bash
 uv run scripts/print_opencode_kickoff.py --gpu-slots 1
@@ -97,11 +110,26 @@ opencode
 Use the `autolab` primary agent from the repo root. For the full parent and
 worker flow, continue with [opencode-workflow.md](opencode-workflow.md).
 
-## 8. Run One Managed Experiment
+Optional Hermes parent session:
+
+```bash
+uv run scripts/print_hermes_kickoff.py --gpu-slots 1
+autolab chat --toolsets "terminal,file,web,skills,delegation,clarify"
+```
+
+For the Hermes path, continue with [hermes-subagents-guide.md](hermes-subagents-guide.md).
+
+## 9. Run One Managed Experiment
 
 Edit `train.py`, or launch an isolated worker with
 `uv run scripts/opencode_worker.py create ...` and
-`uv run scripts/opencode_worker.py run ...`, then run:
+`uv run scripts/opencode_worker.py run ...`.
+
+For Hermes, reserve the worktree with `uv run scripts/hermes_worker.py create ...`
+and print the worker payload with
+`uv run scripts/hermes_worker.py delegate ...`.
+
+Then run:
 
 ```bash
 uv run scripts/hf_job.py preflight
@@ -116,7 +144,7 @@ Rules:
 - `train.py` only unless explicitly authorized otherwise
 - do not modify `prepare.py`
 
-## 9. Record The Run Locally
+## 10. Record The Run Locally
 
 Every completed run should be appended to the local ledger:
 
@@ -127,7 +155,7 @@ uv run scripts/submit_patch.py --comment "one-sentence hypothesis and observed v
 This always records the run in `research/results.tsv`. It promotes the local
 master only when the observed `val_bpb` beats current master.
 
-## 10. Optional: Local Trackio Dashboard
+## 11. Optional: Local Trackio Dashboard
 
 ```bash
 uv run scripts/trackio_reporter.py sync --project "${AUTOLAB_TRACKIO_PROJECT:-autolab}"
